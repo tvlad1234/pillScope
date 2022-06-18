@@ -1,0 +1,3 @@
+[submodule "Drivers/SSD1306-Cube"]
+	path = Drivers/SSD1306-Cube
+	url = https://github.com/tvlad1234/SSD1306-Cube.git
