@@ -32,4 +32,10 @@ an LM358 dual op-amp, which buffers the reference voltage and the output of the 
 
 The schematic of the analog frontend can be found in the frontend.pdf file.
 
+## Pictures
+![20220619_165356](https://user-images.githubusercontent.com/60291077/174484756-e336c5bb-27e9-40c6-923a-6aa228a2cb00.jpg)
+![20220619_165433](https://user-images.githubusercontent.com/60291077/174484767-cb0bdf95-f4b4-4de8-8a6a-038e26494a6b.jpg)
+![20220619_165454](https://user-images.githubusercontent.com/60291077/174484772-ff6349dc-41c2-4f28-a758-074f50fc7af4.jpg)
+
+
 
