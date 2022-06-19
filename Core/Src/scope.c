@@ -28,6 +28,7 @@ int currentMenu = 1;
 void scopeInit()
 {
     ssd1306Begin(SSD1306_SWITCHCAPVCC, &hi2c1, 128, 64);
+    splash();
 
     sampRate = (16000 * 1000) / tdiv;
     setTimerFreq(sampRate);

@@ -3,12 +3,15 @@
 #include "ui.h"
 #include "wave.h"
 
+#include "usbd_cdc_if.h"
+
 extern uint16_t adcBuf[BUFFER_LEN]; // this is where we'll store data
 
 extern int atten;
 extern float vdiv;
 extern float trigVoltage;
 extern uint8_t trig;
+extern int trigPoint;
 
 extern float tdiv;
 extern uint32_t measuredFreq;
@@ -16,6 +19,14 @@ extern uint32_t sampRate;
 extern float maxVoltage, minVoltage;
 
 extern int currentMenu;
+
+void splash()
+{
+    printString("pillScope\nCompiled ");
+    printString(__DATE__);
+    flushDisplay();
+    HAL_Delay(2500);
+}
 
 void ui()
 {
@@ -38,6 +49,9 @@ void sideMenu()
     case 3: // Time per div
         tDivMenu();
         break;
+    case 4: // USB menu
+        usbMenu();
+        break;
     default:
         break;
     }
@@ -45,7 +59,7 @@ void sideMenu()
     if (!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
     {
         currentMenu++;
-        if (currentMenu > 3)
+        if (currentMenu > 4)
             currentMenu = 1;
         HAL_Delay(100);
     }
@@ -232,6 +246,75 @@ void tDivMenu()
         setTimerFreq(sampRate);
 
         HAL_Delay(100);
+    }
+}
+
+void usbMenu()
+{
+    setTextColor(BLACK, WHITE);
+    setCursor(100, 1);
+    printString("USB");
+
+    if (!HAL_GPIO_ReadPin(BTN2_GPIO_Port, BTN2_Pin))
+    {
+        char st[10];
+        char s1[10];
+        uint8_t buffer[30] = "";
+
+        sprintf(buffer, "Model,TekscopeSW\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Label,CH1\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Waveform Type,ANALOG\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Horizontal Units,s\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        float sampPer = tdiv / 16.0;
+        printFloat(sampPer, 2, st);
+
+        sprintf(buffer, "Sample Interval,%sE-06\n\r",st);
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Record Length,95\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Zero Index,3\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "Vertical Units,V\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, ",\n\rLabels,\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        sprintf(buffer, "TIME,CH1\n\r");
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+
+        for (int i = 0; i <= 94; i++)
+        {
+            float voltage = adcToVoltage(adcBuf[i + trigPoint]);
+            printFloat(voltage, 3, st);
+            printFloat((float)i*sampPer, 2, s1);
+            sprintf(buffer, "%sE-06,%s\n\r", s1, st);
+            CDC_Transmit_FS(buffer, strlen(buffer));
+            HAL_Delay(5);
+        }
+
+        HAL_Delay(1000);
     }
 }
 
