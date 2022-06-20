@@ -35,6 +35,9 @@ The schematic of the analog frontend can be found in the frontend.pdf file.
 
 ## Saving wavevorms
 The captured waveforms can be sent to a computer over USB. Sending `s` or `S` to the USB serial port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
+![Waveform in TekScope](https://user-images.githubusercontent.com/60291077/174594659-d71b9acf-26f0-4e4b-9766-6355c0acc5a1.png)
+![Waveform as seen on pillScope](https://user-images.githubusercontent.com/60291077/174594986-da637a78-c6e8-41b8-afad-d20e912a3005.jpg)
+
 
 ## Pictures
 ![20220619_165356](https://user-images.githubusercontent.com/60291077/174484756-e336c5bb-27e9-40c6-923a-6aa228a2cb00.jpg)
