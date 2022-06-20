@@ -3,6 +3,6 @@
 
 float adcToVoltage(uint16_t samp);
 void drawWave();
-int findTrigger();
+void findTrigger();
 
 #endif
