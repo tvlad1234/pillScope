@@ -33,6 +33,7 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "ssd1306.h"
 #include "gfx.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

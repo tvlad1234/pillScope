@@ -3,12 +3,15 @@
 #include "ui.h"
 #include "wave.h"
 
+#include "usbd_cdc_if.h"
+
 extern uint16_t adcBuf[BUFFER_LEN]; // this is where we'll store data
 
 extern int atten;
 extern float vdiv;
 extern float trigVoltage;
 extern uint8_t trig;
+extern int trigPoint;
 
 extern float tdiv;
 extern uint32_t measuredFreq;
@@ -17,11 +20,28 @@ extern float maxVoltage, minVoltage;
 
 extern int currentMenu;
 
+uint8_t outputFlag = 0;
+
+void splash()
+{
+    printString("pillScope\nCompiled ");
+    printString(__DATE__);
+    flushDisplay();
+    HAL_Delay(2500);
+}
+
 void ui()
 {
     clearDisplay();
     drawWave();
     sideMenu();
+
+    if (outputFlag) // If the computer requested data, we send it. This flag is modified in the USB receive handler in usbd_cdc_if.c
+    {
+        outputCSV();
+        outputFlag = 0;
+    }
+
     flushDisplay();
 }
 
@@ -38,6 +58,9 @@ void sideMenu()
     case 3: // Time per div
         tDivMenu();
         break;
+    case 4: // USB menu
+        usbMenu();
+        break;
     default:
         break;
     }
@@ -45,7 +68,7 @@ void sideMenu()
     if (!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
     {
         currentMenu++;
-        if (currentMenu > 3)
+        if (currentMenu > 4)
             currentMenu = 1;
         HAL_Delay(100);
     }
@@ -203,7 +226,7 @@ void tDivMenu()
 
     if (!HAL_GPIO_ReadPin(BTN3_GPIO_Port, BTN3_Pin))
     {
-        if (tdiv > 50)
+        if (tdiv > 20)
         {
             if (tdiv > 1000)
                 tdiv -= 1000;
@@ -232,6 +255,90 @@ void tDivMenu()
         setTimerFreq(sampRate);
 
         HAL_Delay(100);
+    }
+}
+
+void outputCSV()
+{
+    char st[10];
+    char s1[10];
+    uint8_t buffer[30] = "";
+    
+    setCursor(12, 5);
+    setTextColor(BLACK, WHITE);
+    printString("Sending data");
+    flushDisplay();
+
+    sprintf(buffer, "\033[2J\033[H\033[3J");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Model,TekscopeSW\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Label,CH1\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Waveform Type,ANALOG\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Horizontal Units,s\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    float sampPer = tdiv / 16.0;
+    printFloat(sampPer, 2, st);
+
+    sprintf(buffer, "Sample Interval,%sE-06\n\r", st);
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Record Length,%d\n\r", BUFFER_LEN);
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Zero Index,%d\n\r", trigPoint);
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "Vertical Units,V\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, ",\n\rLabels,\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    sprintf(buffer, "TIME,CH1\n\r");
+    CDC_Transmit_FS(buffer, strlen(buffer));
+    HAL_Delay(5);
+
+    for (int i = 0; i < BUFFER_LEN; i++)
+    {
+        float voltage = adcToVoltage(adcBuf[i]);
+        printFloat(voltage, 1, st);
+        printFloat((float)i * sampPer, 3, s1);
+        sprintf(buffer, "%sE-06,%s\n\r", s1, st);
+        CDC_Transmit_FS(buffer, strlen(buffer));
+        HAL_Delay(5);
+    }
+}
+
+void usbMenu()
+{
+    setTextColor(BLACK, WHITE);
+    setCursor(100, 1);
+    printString("USB");
+    setTextColor(WHITE, BLACK);
+    setCursor(100, 10);
+    printString("Send");
+    if (!HAL_GPIO_ReadPin(BTN2_GPIO_Port, BTN2_Pin))
+    {
+        outputCSV();
+        HAL_Delay(1000);
     }
 }
 

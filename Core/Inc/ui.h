@@ -1,6 +1,7 @@
 #ifndef __UI_H
 #define __UI_H
 
+void splash();
 void ui();
 void sideMenu();
 void voltageInfo();
