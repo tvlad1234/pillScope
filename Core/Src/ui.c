@@ -5,8 +5,8 @@
 
 #include "usbd_cdc_if.h"
 
-extern uint16_t adcBuf[BUFFER_LEN]; // this is where we'll store data
-
+// All kinds of variables, you'll see what these do in scope.c
+extern uint16_t adcBuf[BUFFER_LEN];
 extern int atten;
 extern float vdiv;
 extern float trigVoltage;
@@ -14,14 +14,16 @@ extern uint8_t trig;
 extern int trigPoint;
 
 extern float tdiv;
-extern uint32_t measuredFreq;
 extern uint32_t sampRate;
+extern float sampPer;
+
 extern float maxVoltage, minVoltage;
+extern float measuredFreq, sigPer;
 
-extern int currentMenu;
+int currentMenu = 1;
+uint8_t outputFlag = 0; // whether or not we should output data to the USB port
 
-uint8_t outputFlag = 0;
-
+// A little startup splash screen
 void splash()
 {
     printString("pillScope\nCompiled ");
@@ -30,11 +32,12 @@ void splash()
     HAL_Delay(2500);
 }
 
+// The main UI function
 void ui()
 {
     clearDisplay();
-    drawWave();
-    sideMenu();
+    drawWave(); // Draw the wave
+    sideMenu(); // Handle the side menu
 
     if (outputFlag) // If the computer requested data, we send it. This flag is modified in the USB receive handler in usbd_cdc_if.c
     {
@@ -45,6 +48,7 @@ void ui()
     flushDisplay();
 }
 
+// This function handles the side menu
 void sideMenu()
 {
     switch (currentMenu)
@@ -52,11 +56,11 @@ void sideMenu()
     case 1: // Print voltage measurements
         voltageInfo();
         break;
-    case 2: // Volts per div and trig
-        vDivMenu();
+    case 2: // Adjust vertical parameters
+        voltsMenu();
         break;
-    case 3: // Time per div
-        tDivMenu();
+    case 3: // Adjust time
+        timeMenu();
         break;
     case 4: // USB menu
         usbMenu();
@@ -65,6 +69,7 @@ void sideMenu()
         break;
     }
 
+    // The menu button cycles between menus
     if (!HAL_GPIO_ReadPin(BTN1_GPIO_Port, BTN1_Pin))
     {
         currentMenu++;
@@ -74,6 +79,7 @@ void sideMenu()
     }
 }
 
+// This function displays voltage info in the side menu
 void voltageInfo()
 {
     char st[15];
@@ -102,11 +108,10 @@ void voltageInfo()
     printf("%sV\n", st);
 }
 
-void vDivMenu()
+// This function adjusts the volts per div, trigger level, trigger slope and attenuation
+void voltsMenu()
 {
-
     static uint8_t sel = 0;
-
     char st[10];
 
     setTextColor(BLACK, WHITE);
@@ -151,21 +156,21 @@ void vDivMenu()
 
     if (!HAL_GPIO_ReadPin(BTN3_GPIO_Port, BTN3_Pin))
     {
-        if (sel == 0) // vdiv
+        if (sel == 0) // volts per div
         {
             if (vdiv > 0.5)
                 vdiv -= 0.5;
         }
-        else if (sel == 1) // trigLevel
+        else if (sel == 1) // trigger level
         {
             if (trigVoltage > -4)
                 trigVoltage -= 0.1;
         }
-        else if (sel == 2) // trigType
+        else if (sel == 2) // trigger slope
         {
             trig = FALLING;
         }
-        else if (sel == 3) // atten
+        else if (sel == 3) // attenuation
         {
             atten = 1;
         }
@@ -205,7 +210,8 @@ void vDivMenu()
         sel = 0;
 }
 
-void tDivMenu()
+// This function sets the time per div and displays the frequency of the input signal
+void timeMenu()
 {
     char st[10];
 
@@ -224,6 +230,31 @@ void tDivMenu()
     else
         printf("%d\n", (int)tdiv / 1000);
 
+    setTextColor(BLACK, WHITE);
+    setCursor(100, 21);
+    printString("Freq");
+    setTextColor(WHITE, BLACK);
+    setCursor(100, 30);
+
+    if (measuredFreq >= 1000)
+    {
+        if (measuredFreq >= 100000)
+            printf("%d\n", (int)measuredFreq / 1000);
+        else
+        {
+            printFloat(measuredFreq / 1000, 1, st);
+            printString(st);
+        }
+        setCursor(100, 40);
+        printString("kHz");
+    }
+    else
+    {
+        printf("%d\n", (int)measuredFreq);
+        setCursor(100, 40);
+        printString("Hz");
+    }
+
     if (!HAL_GPIO_ReadPin(BTN3_GPIO_Port, BTN3_Pin))
     {
         if (tdiv > 20)
@@ -237,6 +268,7 @@ void tDivMenu()
         }
 
         sampRate = (16000 * 1000) / tdiv;
+        sampPer = tdiv / 16.0;
         setTimerFreq(sampRate);
 
         HAL_Delay(100);
@@ -252,18 +284,20 @@ void tDivMenu()
             tdiv += 10;
 
         sampRate = (16000 * 1000) / tdiv;
+        sampPer = tdiv / 16.0;
         setTimerFreq(sampRate);
 
         HAL_Delay(100);
     }
 }
 
+// This function dumps the captured waveform as TekScope-compatible CSV data
 void outputCSV()
 {
     char st[10];
     char s1[10];
     uint8_t buffer[30] = "";
-    
+
     setCursor(12, 5);
     setTextColor(BLACK, WHITE);
     printString("Sending data");
@@ -289,9 +323,7 @@ void outputCSV()
     CDC_Transmit_FS(buffer, strlen(buffer));
     HAL_Delay(5);
 
-    float sampPer = tdiv / 16.0;
     printFloat(sampPer, 2, st);
-
     sprintf(buffer, "Sample Interval,%sE-06\n\r", st);
     CDC_Transmit_FS(buffer, strlen(buffer));
     HAL_Delay(5);
@@ -327,6 +359,7 @@ void outputCSV()
     }
 }
 
+// This menu allows sending the waveform to the computer
 void usbMenu()
 {
     setTextColor(BLACK, WHITE);
@@ -342,6 +375,7 @@ void usbMenu()
     }
 }
 
+// This function draws the graticule onto the screen
 void drawGraticule(int hei, int wit, int pix, int divx, int divy)
 {
     for (int i = 0; i <= wit; i += pix)
@@ -351,6 +385,7 @@ void drawGraticule(int hei, int wit, int pix, int divx, int divy)
         dottedHLine(0, i, wit);
 }
 
+// This function draws a dotted horizontal line, used for drawing the graticule
 void dottedHLine(int x, int y, int l)
 {
     uint8_t col = 1;
@@ -361,6 +396,7 @@ void dottedHLine(int x, int y, int l)
     }
 }
 
+// This function draws a dotted vertical line, used for drawing the graticule
 void dottedVLine(int x, int y, int l)
 {
     uint8_t col = 1;
