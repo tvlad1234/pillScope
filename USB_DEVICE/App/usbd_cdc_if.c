@@ -259,8 +259,11 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  extern uint8_t outputFlag;
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  if(Buf[0] == 's' || Buf[0] == 'S') // if we receive an s or S, we tell the UI to dump the data to the usb port
+    outputFlag = 1;
   return (USBD_OK);
   /* USER CODE END 6 */
 }

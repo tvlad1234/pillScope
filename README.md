@@ -3,8 +3,9 @@ Oscilloscope based around the STM32F103 Blue Pill and an OLED screen
 ## Specifications
 -3.3V to 3.3V input range (can be increased if using attenuator probes)\
 Approximatively 1MOhm input impedance\
-Timebase goes down to 50uS/div
-## Required parts:
+Timebase goes down to 20uS/div\
+Captured waveforms can be sent over USB in TekScope-compatible CSV format.
+## Required parts
 ### Base parts:
 STM32F103C8 Blue Pill development board\
 128x64 SSD1306-based OLED display\
@@ -13,7 +14,7 @@ STM32F103C8 Blue Pill development board\
 LM358 dual op-amp (rail-to-rail opamps should work better in this context, but this is what I had on hand)\
 2x 68kOhm resistors (to create a 1.65V offset voltage)\
 2x 500kOhm resistors (to create the input attenuator)
-### 2x probes
+### 2x probes:
 just a 1MOhm resistor, in series with the input
 
 ## Schematics
@@ -31,6 +32,9 @@ a 2x voltage divider at the input\
 an LM358 dual op-amp, which buffers the reference voltage and the output of the input attenuator
 
 The schematic of the analog frontend can be found in the frontend.pdf file.
+
+## Saving wavevorms
+The captured waveforms can be sent to a computer over USB. Sending `s` or `S` to the USB serial port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
 
 ## Pictures
 ![20220619_165356](https://user-images.githubusercontent.com/60291077/174484756-e336c5bb-27e9-40c6-923a-6aa228a2cb00.jpg)
