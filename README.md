@@ -1,5 +1,6 @@
 # pillScope
-Oscilloscope based around the STM32F103 Blue Pill and an OLED screen
+Oscilloscope based around the STM32F103 Blue Pill and an OLED screen\
+_Take a look at [pillScope Plus](https://github.com/tvlad1234/pillScopePlus), with a better screen and more sample memory_
 ## Features
 -3.3V to 3.3V input range (can be increased if using attenuator probes)\
 Approximatively 1MOhm input impedance\
@@ -37,7 +38,8 @@ The schematic of the analog frontend can be found in the frontend.pdf file.
 ## Saving wavevorms
 The captured waveforms can be sent to a computer over USB. Sending `s` or `S` to the USB serial port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
 ![Waveform in TekScope](https://user-images.githubusercontent.com/60291077/174594659-d71b9acf-26f0-4e4b-9766-6355c0acc5a1.png)
-![Waveform as seen on pillScope](https://user-images.githubusercontent.com/60291077/174594986-da637a78-c6e8-41b8-afad-d20e912a3005.jpg)
+![Waveform on pillScope](https://user-images.githubusercontent.com/60291077/175494191-82f16835-0c3a-488d-b7e0-959405abd570.jpg)
+
 
 ## Code
 The code can be compiled with `make`. Be sure to recursively clone this repository, as the display driver is included as a submodule. The actual oscilloscope code of this project is located in `Core\Src`, the `scope.c`, `ui.c`, `wave.c` files. Feel free to take a look, as they're commented for ease of understanding.
@@ -45,7 +47,4 @@ The code can be compiled with `make`. Be sure to recursively clone this reposito
 ## Pictures
 ![20220619_165356](https://user-images.githubusercontent.com/60291077/174484756-e336c5bb-27e9-40c6-923a-6aa228a2cb00.jpg)
 ![20220619_165433](https://user-images.githubusercontent.com/60291077/174484767-cb0bdf95-f4b4-4de8-8a6a-038e26494a6b.jpg)
-![20220619_165454](https://user-images.githubusercontent.com/60291077/174484772-ff6349dc-41c2-4f28-a758-074f50fc7af4.jpg)
-
-
 
