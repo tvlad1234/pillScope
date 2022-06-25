@@ -21,7 +21,9 @@ extern float maxVoltage, minVoltage;
 extern float measuredFreq, sigPer;
 
 int currentMenu = 1;
-uint8_t outputFlag = 0; // whether or not we should output data to the USB port
+volatile uint8_t outputFlag = 0; // whether or not we should output data to the USB port
+
+extern UART_HandleTypeDef huart1;
 
 // A little startup splash screen
 void splash()
@@ -41,7 +43,7 @@ void ui()
 
     if (outputFlag) // If the computer requested data, we send it. This flag is modified in the USB receive handler in usbd_cdc_if.c
     {
-        outputCSV();
+        outputCSV(outputFlag);
         outputFlag = 0;
     }
 
@@ -291,8 +293,24 @@ void timeMenu()
     }
 }
 
+void outputSerial(char s[], uint8_t o)
+{
+    switch (o)
+    {
+    case 1:
+        CDC_Transmit_FS(s, strlen(s));
+        HAL_Delay(1);
+        break;
+    case 2:
+        HAL_UART_Transmit(&huart1, s, strlen(s), HAL_MAX_DELAY);
+        break;
+    default:
+        break;
+    }
+}
+
 // This function dumps the captured waveform as TekScope-compatible CSV data
-void outputCSV()
+void outputCSV(uint8_t o)
 {
     char st[10];
     char s1[10];
@@ -304,49 +322,39 @@ void outputCSV()
     flushDisplay();
 
     sprintf(buffer, "\033[2J\033[H\033[3J");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Model,TekscopeSW\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Label,CH1\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Waveform Type,ANALOG\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Horizontal Units,s\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     printFloat(sampPer, 2, st);
     sprintf(buffer, "Sample Interval,%sE-06\n\r", st);
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Record Length,%d\n\r", BUFFER_LEN);
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "Zero Index,%d\n\r", trigPoint);
-    CDC_Transmit_FS(buffer, strlen(buffer));
+    outputSerial(buffer, o);
     HAL_Delay(5);
 
     sprintf(buffer, "Vertical Units,V\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, ",\n\rLabels,\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     sprintf(buffer, "TIME,CH1\n\r");
-    CDC_Transmit_FS(buffer, strlen(buffer));
-    HAL_Delay(5);
+    outputSerial(buffer, o);
 
     for (int i = 0; i < BUFFER_LEN; i++)
     {
@@ -354,23 +362,31 @@ void outputCSV()
         printFloat(voltage, 1, st);
         printFloat((float)i * sampPer, 3, s1);
         sprintf(buffer, "%sE-06,%s\n\r", s1, st);
-        CDC_Transmit_FS(buffer, strlen(buffer));
-        HAL_Delay(5);
+        outputSerial(buffer, o);
     }
 }
 
 // This menu allows sending the waveform to the computer
 void usbMenu()
 {
+    static uint8_t sel = 1;
     setTextColor(BLACK, WHITE);
     setCursor(100, 1);
-    printString("USB");
+    printString("Send");
     setTextColor(WHITE, BLACK);
     setCursor(100, 10);
-    printString("Send");
+    if (sel == 1)
+        printString("USB");
+    else
+        printString("UART");
+
+    if (!HAL_GPIO_ReadPin(BTN3_GPIO_Port, BTN3_Pin))
+        sel = 1;
+    if (!HAL_GPIO_ReadPin(BTN4_GPIO_Port, BTN4_Pin))
+        sel = 2;
     if (!HAL_GPIO_ReadPin(BTN2_GPIO_Port, BTN2_Pin))
     {
-        outputCSV();
+        outputCSV(sel);
         HAL_Delay(1000);
     }
 }

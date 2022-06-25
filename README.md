@@ -6,7 +6,7 @@ _Take a look at [pillScope Plus](https://github.com/tvlad1234/pillScopePlus), wi
 Approximatively 1MOhm input impedance\
 Timebase goes down to 20uS/div\
 On screen measurements: min/max voltage, peak-to-peak voltage, frequency\
-Captured waveforms can be sent over USB in TekScope-compatible CSV format.
+Captured waveforms can be sent over USB or UART in TekScope-compatible CSV format.
 ## Required parts
 ### Base parts:
 STM32F103C8 Blue Pill development board\
@@ -26,6 +26,8 @@ PB13: Select\
 PB8: Down\
 PB9: Up
 
+PA9 is the UART TX, PA10 is RX
+
 The output of the analog frontend is connected to ADC1_IN0, which corresponds to PA0.
 
 The analog frontend consists of:\
@@ -36,7 +38,7 @@ an LM358 dual op-amp, which buffers the reference voltage and the output of the 
 The schematic of the analog frontend can be found in the frontend.pdf file.
 
 ## Saving wavevorms
-The captured waveforms can be sent to a computer over USB. Sending `s` or `S` to the USB serial port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
+The captured waveforms can be sent to a computer over USB or UART. Sending `s` or `S` to either port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
 ![Waveform in TekScope](https://user-images.githubusercontent.com/60291077/174594659-d71b9acf-26f0-4e4b-9766-6355c0acc5a1.png)
 ![Waveform on pillScope](https://user-images.githubusercontent.com/60291077/175494191-82f16835-0c3a-488d-b7e0-959405abd570.jpg)
 
