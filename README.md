@@ -15,7 +15,8 @@ STM32F103C8 Blue Pill development board\
 ### Analog frontend:
 LM358 dual op-amp (rail-to-rail opamps should work better in this context, but this is what I had on hand)\
 2x 68kOhm resistors (to create a 1.65V offset voltage)\
-2x 500kOhm resistors (to create the input attenuator)
+2x 500kOhm resistors (to create the input attenuator)\
+
 ### 2x probes:
 just a 1MOhm resistor, in series with the input
 
@@ -36,6 +37,13 @@ a 2x voltage divider at the input,\
 an LM358 dual op-amp, which buffers the reference voltage and the output of the input attenuator
 
 The schematic of the analog frontend can be found in the frontend.pdf file.
+
+## Using the oscilloscope
+### The UI
+The menu buton cycles between menus on the right side of the screen, while the select button changes the current selection in the menu.
+
+### Measuring things
+The frontend makes use of a virtual ground point which is 1.65V above the real ground. Because of this, the oscilloscope and the device under test must not be sharing the same ground reference. If you need to send data to the computer while measuring a device which shares ground with the scope, you should connect the computer via the UART port, with an opto-isolated adapter, while powering the oscilloscope from and external source.
 
 ## Saving wavevorms
 The captured waveforms can be sent to a computer over USB or UART. Sending `s` or `S` to either port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
