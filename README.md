@@ -43,7 +43,7 @@ The schematic of the analog frontend can be found in the frontend.pdf file.
 The menu buton cycles between menus on the right side of the screen, while the select button changes the current selection in the menu.
 
 ### Measuring things
-The frontend makes use of a virtual ground point which is 1.65V above the real ground. Because of this, the oscilloscope and the device under test must not be sharing the same ground reference. If you need to send data to the computer while measuring a device which shares ground with the scope, you should connect the computer via the UART port, with an opto-isolated adapter, while powering the oscilloscope from and external source.
+The frontend makes use of a virtual ground point which is 1.65V above the real ground. Because of this, the oscilloscope and the device under test must not be sharing the same ground reference. If you need to send data to the computer while measuring a device which shares ground with the scope, you should connect the computer via the UART port, with an opto-isolated adapter, while powering the oscilloscope from an external source.
 
 ## Saving wavevorms
 The captured waveforms can be sent to a computer over USB or UART. Sending `s` or `S` to either port will tell the scope to output the captured waveform in CSV format. This data can then be imported into the Tektronix TekScope app for further analysis.
